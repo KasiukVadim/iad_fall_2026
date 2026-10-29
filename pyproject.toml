@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "maxwell-emlab"
+version = "1.0.0"
+description = "Symbolic and numerical Maxwell scattering and tag-reader coupling laboratory"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.26,<3", "scipy>=1.12,<2", "sympy>=1.12,<2", "matplotlib>=3.8,<4", "networkx>=3.2,<4", "PyYAML>=6,<7", "requests>=2.31,<3"]
+[project.optional-dependencies]
+lab = ["pytest>=8,<10", "nbformat>=5,<6", "nbclient>=0.10,<1", "ipykernel>=6,<8", "symengine>=0.13,<1"]
+[tool.setuptools.packages.find]
+where = ["src"]
+[tool.pytest.ini_options]
+pythonpath = ["src"]

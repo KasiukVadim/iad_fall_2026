@@ -1,0 +1,47 @@
+Solving Maxwell 3D
+Fitting RLC transient
+{
+  "symbolic": {
+    "sympy_matrix_curl": "Matrix([[-x**2 + 2*x*y], [-y**2 + y], [2*x*z - z]])",
+    "sympy_vector_curl": "(-C.x**2 + 2*C.x*C.y)*C.i + (-C.y**2 + C.y)*C.j + (2*C.x*C.z - C.z)*C.k",
+    "sympy_vector_div": "0",
+    "vector_seconds": 0.005584438999903796,
+    "matrix_vector_curl_equal": true,
+    "symengine_derivative_equal": true,
+    "symengine_seconds": 0.0036106269999436336
+  },
+  "silica_rayleigh_max_relative_error": 0.0036046905173092387,
+  "water_rayleigh_max_relative_error": 0.009259031664719825,
+  "maxwell_energy_relative_drift": 1.6914906142417863e-09,
+  "maxwell_max_divD": 3.419486915845482e-14,
+  "maxwell_max_divH": 2.9476421303797906e-14,
+  "plane_wave_grid_sizes": [
+    12,
+    24,
+    48
+  ],
+  "plane_wave_rmse": [
+    0.12997385365956932,
+    0.03287280396019466,
+    0.00824004747470359
+  ],
+  "plane_wave_orders": [
+    1.9832550063092353,
+    1.9961699650298665
+  ],
+  "coupling_fit": {
+    "true_M_nH": 3.7673022060741843,
+    "fitted_M_nH": 3.8261705665770176,
+    "true_R2_ohm": 4.0,
+    "fitted_R2_ohm": 4.0729760061665905,
+    "heldout_rmse_A": 2.738743093182639e-05,
+    "noise_std_A": 0.00032395488923171094,
+    "jacobian_rank": 2,
+    "nfev": 10
+  },
+  "environment": {
+    "python": "3.12.14",
+    "numpy": "2.3.5",
+    "seed": 20261029
+  }
+}

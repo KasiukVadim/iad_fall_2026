@@ -1,0 +1,236 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+\usepackage{fontspec,polyglossia}
+\setdefaultlanguage{russian}\setotherlanguage{english}
+\setsansfont{DejaVu Sans}\setmainfont{DejaVu Sans}\setmonofont{DejaVu Sans Mono}
+\newfontfamily\cyrillicfont{DejaVu Sans}\newfontfamily\cyrillicfontsf{DejaVu Sans}
+\usepackage{amsmath,amssymb,booktabs,graphicx}
+\definecolor{navy}{HTML}{102A43}\definecolor{teal}{HTML}{087E8B}
+\setbeamercolor{structure}{fg=teal}\setbeamercolor{frametitle}{fg=navy}
+\setbeamercolor{normal text}{fg=navy,bg=white}
+\setbeamertemplate{navigation symbols}{}\setbeamertemplate{footline}[frame number]
+\setbeamersize{text margin left=9mm,text margin right=9mm}
+\title{Уравнения Максвелла}
+\subtitle{EM scattering and tag-reader coupling\\Символьная модель, 3D-динамика и идентификация}
+\author{Лабораторная работа · тема 3}
+\date{29 октября 2026}
+\newcommand{\fig}[2][.73]{\centering\includegraphics[height=#1\textheight,width=.98\textwidth,keepaspectratio]{../results/#2.png}}
+\begin{document}
+\begin{frame}\titlepage\end{frame}
+
+\begin{frame}{Задача: от уравнений к проверяемой модели}
+\begin{enumerate}
+\item Сравнить символьные представления и векторные операторы.
+\item Сохранить уравнения как словарь, граф и матрицу смежности.
+\item Получить решение Максвелла в 3D со временем.
+\item Проверить аппроксимацию и восстановить параметры ODE.
+\item Подготовить интерфейс физической модели с поправкой.
+\end{enumerate}
+\vspace{3mm}
+Три связанных учебных блока: \textbf{сфера → поле → катушки}. Это разные режимы одной теории; оптические данные не переносятся в RFID.
+\end{frame}
+
+\begin{frame}{Основание: журнальные статьи и открытые данные}
+\small
+\begin{tabular}{p{.32\textwidth}p{.59\textwidth}}
+\toprule Источник & Роль в работе\\\midrule
+Sharif et al., Sci. Rep., 2023 & Reader/tag как связанные цепи; геометрия статьи не воспроизводится.\\[2mm]
+Abdelrahman et al., Sci. Rep., 2017 & Рассеяние на диэлектрических сферах, коэффициенты Ми.\\[2mm]
+Malitson, 1965 & Дисперсия кварцевого стекла, 20°C.\\[2mm]
+Daimon \& Masumura, 2007 & Дисперсия воды, 20°C.\\\bottomrule
+\end{tabular}
+\vspace{3mm}
+Два независимых исследования материалов доставлены по HTTP через RefractiveIndex.INFO. Это опубликованные модели дисперсии; внешних измеренных 3D-полей здесь нет.
+\end{frame}
+
+\begin{frame}{Символьная модель в $(x,y,z,t)$}
+\[
+\epsilon\partial_t\mathbf E+\sigma\mathbf E+\mathbf J-\nabla\times\mathbf H=0,
+\qquad \mu\partial_t\mathbf H+\nabla\times\mathbf E=0.
+\]
+\[\nabla\cdot\mathbf D=\rho,\qquad\nabla\cdot\mathbf B=0.\]
+\begin{itemize}
+\item SymPy Matrix: компоненты и производные видны явно.
+\item sympy.vector: геометрическая запись curl, divergence.
+\item SymEngine: независимый алгебраический движок.
+\end{itemize}
+Константные $\epsilon,\mu$ в этой записи; в численной неоднородной задаче интегрируется $\mathbf D=\epsilon(\mathbf x)\mathbf E$.
+\end{frame}
+
+\begin{frame}{Операторы: проверяем смысл и тождества}
+\[\mathbf F=(yz,x^2z,xy^2),\quad f=x^2y+\sin z.\]
+\[\nabla\times\mathbf F=(2xy-x^2,\ y-y^2,\ 2xz-z).\]
+\begin{itemize}
+\item grad, curl, div; скалярное и векторное произведение.
+\item Матрица Якоби и покомпонентный лапласиан.
+\item Проверки: $\nabla\times\nabla f=0$, $\nabla\cdot(\nabla\times\mathbf F)=0$.
+\end{itemize}
+Дивергенция возвращает скаляр. Совпадение представлений проверяется символически; единичные замеры времени не дают рейтинга скорости библиотек.
+\end{frame}
+
+\begin{frame}{Уравнение как граф вычисления}
+\fig[.67]{expression_graph}
+\small Ребро: родитель → операнд. Вершины — вхождения AST, а не точки пространственной сетки. Экспорт: JSON, GraphML, CSV.
+\end{frame}
+
+\begin{frame}{Матрица смежности хранит структуру выражения}
+\begin{columns}
+\column{.53\textwidth}\fig[.68]{adjacency}
+\column{.44\textwidth}
+$A_{ij}=1$, если узел $j$ — операнд узла $i$.
+\vspace{4mm}
+Порядок ID и подписи сохранены в отдельном JSON.
+\vspace{4mm}
+Словарь уравнений хранит \texttt{srepr}; обратное преобразование проверено тестом.
+\end{columns}
+\end{frame}
+
+\begin{frame}{Рассеяние: Ми и предел Рэлея}
+\[Q_{\rm sca}=\frac{2}{x^2}\sum_{n=1}^{N}(2n+1)(|a_n|^2+|b_n|^2),\quad x=2\pi a/\lambda.\]
+\[Q_R=\frac83x^4\left|\frac{m^2-1}{m^2+2}\right|^2,\qquad x\ll1.\]
+\begin{itemize}
+\item Сфера в вакууме, $m=n_{\rm sphere}$, $\mu_r=1$.
+\item $a=25$ nm, $\lambda=0.45\ldots1.0$ μm; прозрачные материалы.
+\item Реальное поле: $\operatorname{Re}[\mathbf E(\mathbf r)e^{-i\omega t}]$.
+\end{itemize}
+Ми — независимый аналитический эталон для Рэлея. Периодический IVP далее имеет другие границы и начальные условия.
+\end{frame}
+
+\begin{frame}{Два материала: изменение дисперсии и рассеяния}
+\fig[.66]{materials_scattering}
+\small Максимальная относительная ошибка Рэлея на этом диапазоне: кварцевое стекло 0.36\%, вода 0.93\%. Это ошибка приближения относительно Ми, а не относительно измеренного поля.
+\end{frame}
+
+\begin{frame}{Рэлей имеет ограниченную область применимости}
+\fig[.68]{rayleigh_error}
+\small Ошибка $|Q_R-Q_M|/Q_M$, $m=1.46$. На малых $x$ приближение сходится к Ми; вне этого предела оно требует проверки.
+\end{frame}
+
+\begin{frame}{Численная задача: Maxwell 3D + время}
+\[\dot{\mathbf D}=\nabla_h\times\mathbf H,\qquad
+\dot{\mathbf H}=-\nabla_h\times(\mathbf D/\epsilon(\mathbf x)).\]
+\small
+\begin{itemize}
+\item $[0,1)^3$, периодические границы; нормированные $c=\epsilon_0=\mu_0=1$.
+\item Сглаженная сфера: $\epsilon=1+1.1\exp[-(r/0.14)^8]$.
+\item Начальные $D_y=H_z=\cos(2\pi x)$; остальные компоненты нулевые.
+\item Центральные разности $O(h^2)$ и RK4; 24³ узла, 160 шагов, $t_{\rm end}=0.65$.
+\end{itemize}
+\vspace{2mm}
+Храним все компоненты E,H во времени. Нет PML и условия излучения: это периодическая начальная задача, а не модель изолированной антенны.
+\end{frame}
+
+\begin{frame}{Поле меняется в трёх пространственных координатах}
+\fig[.65]{maxwell_slices}
+\small Разность с однородной задачей показывает возмущение IVP. Начальные D,H одинаковы; E внутри включения различаются из-за ε. Это не far-field сечение рассеяния.
+\end{frame}
+
+\begin{frame}{Векторное возмущение поля в 3D}
+\fig[.75]{maxwell_3d}
+\end{frame}
+
+\begin{frame}{Контроль дивергенции и энергии}
+\fig[.65]{conservation}
+\small $\max|\operatorname{div}D|\approx3.4\cdot10^{-14}$, $\max|\operatorname{div}H|\approx2.9\cdot10^{-14}$. Максимальный относительный дрейф энергии $\approx1.7\cdot10^{-9}$.
+\end{frame}
+
+\begin{frame}{Проверка порядка на точном решении}
+\begin{columns}
+\column{.60\textwidth}\fig[.68]{convergence}
+\column{.36\textwidth}\small
+Эталон: $E_y=H_z=\cos[2\pi(x-t)]$ в однородной среде.
+\vspace{4mm}
+\begin{tabular}{rr}\toprule $n$ & RMSE\\\midrule 12 & 0.12997\\24 & 0.03287\\48 & 0.00824\\\bottomrule\end{tabular}
+\vspace{4mm}
+Порядки: 1.98 и 2.00.
+\end{columns}
+\end{frame}
+
+\begin{frame}{От 3D-геометрии к связи reader/tag}
+\begin{columns}
+\column{.54\textwidth}\fig[.65]{coils_3d}
+\column{.43\textwidth}\small
+\[M=\frac{\mu_0}{4\pi}\oint\!\oint\frac{d\boldsymbol\ell_1\cdot d\boldsymbol\ell_2}{|\mathbf r_1-\mathbf r_2|}.\]
+Один виток; радиусы 40 и 15 mm; расстояние 40 mm. Квадратура: 240 точек на петлю.
+\vspace{3mm}
+$f=13.56$ MHz, $\lambda\approx22$ m. Геометрия намного меньше λ: квазистатическая модель допустима.
+\end{columns}
+\end{frame}
+
+\begin{frame}{Связь зависит от расстояния и ориентации}
+\fig[.70]{coupling_map}
+\small Проверены взаимность $M_{12}=M_{21}$, сходимость квадратуры и нулевая связь для ортогональных соосных петель.
+\end{frame}
+
+\begin{frame}{Редуцированная модель динамики контуров}
+\[\underbrace{\begin{pmatrix}L_1&M\\M&L_2\end{pmatrix}}_{\mathbf L}\dot{\mathbf i}
++\mathbf R\mathbf i+\mathbf C^{-1}\mathbf q=(V_s,0)^T,\qquad\dot{\mathbf q}=\mathbf i.\]
+\small
+\begin{itemize}
+\item $L_1=1$ μH, $L_2=0.5$ μH, $R_1=2$ Ω, $R_2=4$ Ω.
+\item $C_j=[(2\pi f)^2L_j]^{-1}$; нулевые начальные токи и заряды.
+\item $V_s=\cos(2\pi ft)$ V, $f=13.56$ MHz; решатель DOP853.
+\item Пассивность: $M^2<L_1L_2$.
+\end{itemize}
+Вектор подбора $\theta=(M\,[\mathrm{nH}],R_2\,[\Omega])$. Начальная точка (12,6), границы [0.1,100] и [0.5,15].
+\end{frame}
+
+\begin{frame}{Подбор параметров по синтетическому сигналу}
+\fig[.62]{parameter_fit}
+\small 501 точка за 2 μs. Gaussian шум: 1\% peak current; seed фиксирован. Каждая третья точка исключена из least squares. Истинные данные и оценка получены с разными точностями ODE.
+\end{frame}
+
+\begin{frame}{Результат идентификации и его границы}
+\centering
+\begin{tabular}{lrr}\toprule Параметр & Истина & Оценка\\\midrule
+$M$, nH & 3.7673 & 3.8262\\
+$R_2$, Ω & 4.0000 & 4.0730\\\bottomrule
+\end{tabular}
+\vspace{5mm}
+\begin{itemize}
+\item Held-out RMSE относительно чистого сигнала: $2.74\cdot10^{-5}$ A.
+\item Стандартное отклонение шума: $3.24\cdot10^{-4}$ A.
+\item Якобиан имеет ранг 2 в найденной точке.
+\end{itemize}
+\vspace{2mm}
+\small Это проверка на отложенных точках той же синтетической траектории. Она не доказывает перенос на новую антенну или реальные измерения.
+\end{frame}
+
+\begin{frame}{Структура для смешанной модели}
+\[M_{\rm hybrid}=M_{\rm geometry}(d,\alpha)+\Delta M_{\phi}(d,\alpha,\ldots).\]
+\begin{enumerate}
+\item Физический блок вычисляет M по геометрии.
+\item Пользовательская функция добавляет поправку в henry.
+\item Проверяется положительность L-матрицы.
+\item ODE-солвер строит предсказание тока.
+\end{enumerate}
+\vspace{3mm}
+\texttt{HybridModel(correction=callable)} реализован. По умолчанию $\Delta M=0$. Нейросеть не обучалась; для неё нужны независимые измерения.
+\end{frame}
+
+
+\begin{frame}{Что удалось проверить}
+\begin{itemize}
+\item Символьные уравнения можно переводить в словарь и граф без потери структуры.
+\item Сохранение ограничений и сходимость дают количественную проверку Maxwell IVP.
+\item Приближение Рэлея проверяется на независимом решении Ми.
+\item Параметры M и R₂ восстанавливаются в контролируемом synthetic experiment.
+\item Геометрия, физика и поправка соединены через явный интерфейс.
+\end{itemize}
+\vspace{4mm}
+Следующий эксперимент: добавить реальные измерения, шумовые возмущения и проверку на новых положениях метки.
+\end{frame}
+
+\begin{frame}{Источники}
+\scriptsize
+\begin{enumerate}
+\item Sharif et al. Scientific Reports 13,14017 (2023). DOI: 10.1038/s41598-023-39825-9.
+\item Abdelrahman et al. Scientific Reports 7,14762 (2017). DOI: 10.1038/s41598-017-15192-0.
+\item Tzarouchis, Sihvola. Applied Sciences 8,184 (2018). DOI: 10.3390/app8020184.
+\item Malitson. JOSA 55,1205–1208 (1965). DOI: 10.1364/JOSA.55.001205.
+\item Daimon, Masumura. Applied Optics 46,3811–3820 (2007). DOI: 10.1364/AO.46.003811.
+\item Polyanskiy. Scientific Data 11,94 (2024). DOI: 10.1038/s41597-023-02898-2.
+\end{enumerate}
+\vspace{4mm}
+Полные HTTP-адреса, роль формул, документация библиотек: \texttt{docs/SOURCES.md}. Фактические численные результаты: \texttt{results/metrics.json}.
+\end{frame}
+\end{document}

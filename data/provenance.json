@@ -1,0 +1,18 @@
+[
+  {
+    "name": "silica",
+    "url": "https://raw.githubusercontent.com/polyanskiy/refractiveindex.info-database/master/database/data/main/SiO2/nk/Malitson.yml",
+    "sha256": "c587670f397241ecb93a1af3279d6fe7ed67888e587e399074b0eab729c92b52",
+    "references": "1) I. H. Malitson.\nInterspecimen comparison of the refractive index of fused silica.\n<a href=\"https://doi.org/10.1364/JOSA.55.001205\"><i>J. Opt. Soc. Am.</i> <b>55</b>, 1205-1208 (1965)</a><br>\n2) C. Z. Tan.\nDetermination of refractive index of silica glass for infrared wavelengths by IR spectroscopy.\n<a href=\"https://doi.org/10.1016/S0022-3093(97)00438-9\"><i>J. Non-Cryst. Solids</i> <b>223</b>, 158-163 (1998)</a><br>\n* Sellmeier formula is reported in Ref. 1 for the 0.21\u20133.71 \u03bcm wavelength range. Ref. 2 verifies the validity of the formula up to 6.7 \u03bcm.\n",
+    "retrieved_at_utc": "2026-10-29T04:35:32.226863+00:00",
+    "kind": "published dispersion fit, not raw field measurements"
+  },
+  {
+    "name": "water",
+    "url": "https://raw.githubusercontent.com/polyanskiy/refractiveindex.info-database/master/database/data/main/H2O/nk/Daimon-20.0C.yml",
+    "sha256": "5c7ecfd88a13939f7801e3d4f2f8dc33c400f87952681ce59cd02b279ce82cb5",
+    "references": "M. Daimon and A. Masumura.\nMeasurement of the refractive index of distilled water from the near-infrared region to the ultraviolet region.\n<a href=\"https://doi.org/10.1364/AO.46.003811\"><i>Appl. Opt.</i> <b>46</b>, 3811-3820 (2007)</a>\n",
+    "retrieved_at_utc": "2026-10-29T04:38:00.965563+00:00",
+    "kind": "published dispersion fit, not raw field measurements"
+  }
+]
